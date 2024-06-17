@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="36ce89a5-2a46-41c5-b270-c8953a03f542" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="0493fce8-86b6-47b1-8695-30e9a1c1fcab" >
+		<salesforce:basic-connection username="shravankasarla@theesbcorp.com" password="Shravan@0093" securityToken="WuxYU8V5c9HlXv8AG20Rjxpm1"/>
+	</salesforce:sfdc-config>
+	<flow name="salesforceaccountcontactFlow" doc:id="03ea1555-47c7-4069-8aad-574b592672fe" >
+		<http:listener doc:name="Listener" doc:id="5c661336-89f9-4a10-b2d1-cb5a755dffd6" config-ref="HTTP_Listener_config" path="/salesforceaccountcontact"/>
+		<ee:transform doc:name="Transform Message" doc:id="c0e6f5f1-8b43-4f5e-87de-45b48389991d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	Name: "shravanreddy",
+	Phone: "646676765",
+	AccountNumber: "876849",
+	BillingCity: "hyderabad"		
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="Account" doc:name="Account" doc:id="69ea400a-a88e-4698-b620-f76618ff997d" config-ref="Salesforce_Config"/>
+		<ee:transform doc:name="contacts" doc:id="5535af41-cf5a-48cc-83e9-211301682350" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	FirstName : "ram",
+LastName : "bbdkjgh",
+Email : "Ram@gmail.com",
+Phone : "0987643",
+AccountId : "001dL000006zHVrQAM" 
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="d8f7caa2-a8e3-4b98-b48d-0dae4aa9ad4e" >
+			<when expression="#[payload != null]">
+				<salesforce:create doc:name="Contacts" doc:id="05651c88-66c2-4149-af0e-7e09c24ce528" config-ref="Salesforce_Config" type="Contact" />
+			</when>
+		</choice>
+		<ee:transform doc:name="opportunities" doc:id="f821b2b5-daef-40bf-8037-1ea39d50e33e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	"Name": "shravan",
+    "StageName": "VGVTRSUH",
+    "CloseDate": "2020-06-30"as Date {format: "yyyy-MM-dd"},
+    "Amount": 17000,
+    "AccountId": "001dL000006zHVrQAM"
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="9f527b19-6f37-4f6f-80b1-d91db5ebec61" >
+			<when expression="#[payload != null]">
+				<salesforce:create doc:name="Opportunity" doc:id="8ff58ac6-16f0-42ff-815f-8dfc4af7d97a" config-ref="Salesforce_Config" type="Opportunity" />
+			</when>
+		</choice>
+		<ee:transform doc:name="cases" doc:id="003e007a-513b-4475-a944-2a549bd65e0d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+	    "subject": "Server Downtime",
+        "status": "New",
+        "priority": "Critical",
+        "description": "Customer reports server downtime affecting multiple users.",
+        "accountId": "001dL000006zHVrQAM"
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="582d2152-8d90-40f1-bb1c-9ad85358cb3c" >
+			<when expression="#[payload != null]">
+				<salesforce:create doc:name="case" doc:id="41fa96e6-1bbe-475b-b352-646fcdaf8067" config-ref="Salesforce_Config" type="Case" />
+			</when>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="8f341797-a9a0-4005-b779-878eed46e1b9" message="#[payload]"/>
+	</flow>
+</mule>
